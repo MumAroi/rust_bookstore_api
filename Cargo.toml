@@ -11,4 +11,5 @@ sea-orm = { version = "0.12", features = [
     "sqlx-postgres",
     "runtime-tokio-native-tls",
     "macros",
+    "debug-print",
 ] }
