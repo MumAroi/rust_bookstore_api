@@ -1,5 +1,5 @@
 use super::{
-    m20240328_145206_create_users_table::User, m20240329_024433_create_author_table::Author,
+    m20240329_042405_create_users_table::User, m20240329_042432_create_author_table::Author,
 };
 use sea_orm_migration::prelude::*;
 

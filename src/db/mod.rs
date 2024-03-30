@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 use sea_orm::*;
 
 use crate::AppConfig;
