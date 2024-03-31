@@ -7,6 +7,7 @@ extern crate rocket;
 
 mod db;
 mod migrator;
+mod entities;
 
 pub struct AppConfig {
     db_host: String,
