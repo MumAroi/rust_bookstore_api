@@ -1,5 +1,6 @@
 use migrator::Migrator;
 use sea_orm_migration::MigratorTrait;
+use dotenv::dotenv;
 
 #[macro_use]
 extern crate rocket;
@@ -34,6 +35,8 @@ fn index() -> &'static str {
 
 #[launch]
 async fn rocket() -> _ {
+    dotenv().ok(); 
+
     let config: AppConfig = AppConfig::default();
 
     let db = match db::connect(&config).await {
