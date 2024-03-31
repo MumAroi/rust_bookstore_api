@@ -18,21 +18,21 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(User::Email).string().not_null())
+                    .col(ColumnDef::new(User::Email).string().unique_key().not_null())
                     .col(ColumnDef::new(User::Password).string().not_null())
-                    .col(ColumnDef::new(User::FirstName).string().not_null())
-                    .col(ColumnDef::new(User::LastName).string().not_null())
+                    .col(ColumnDef::new(User::FirstName).string().null())
+                    .col(ColumnDef::new(User::LastName).string().null())
                     .col(
                         ColumnDef::new(User::CreatedAt)
                             .timestamp()
                             .extra("DEFAULT CURRENT_TIMESTAMP".to_owned())
-                            .not_null(),
+                            .null(),
                     )
                     .col(
                         ColumnDef::new(User::UpdatedAt)
                             .timestamp()
                             .extra("DEFAULT CURRENT_TIMESTAMP".to_owned())
-                            .not_null(),
+                            .null(),
                     )
                     .to_owned(),
             )
