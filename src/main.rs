@@ -1,4 +1,6 @@
+use controllers::{Response, SuccessResponse};
 use migrator::Migrator;
+use rocket::http::Status;
 use sea_orm_migration::MigratorTrait;
 use dotenv::dotenv;
 
@@ -8,6 +10,7 @@ extern crate rocket;
 mod db;
 mod migrator;
 mod entities;
+mod controllers;
 
 pub struct AppConfig {
     db_host: String,
@@ -30,8 +33,8 @@ impl Default for AppConfig {
 }
 
 #[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
+fn index() -> Response<String> {
+    Ok(SuccessResponse((Status::Ok, "Hello, world!".to_string())))
 }
 
 #[launch]
@@ -50,5 +53,24 @@ async fn rocket() -> _ {
         Ok(_) => (),
     };
 
-    rocket::build().mount("/", routes![index])
+    rocket::build()
+    .mount("/", routes![index])
+    .mount("/auth", routes![
+        controllers::auth::sign_in,
+        controllers::auth::sign_up
+    ])
+    .mount("/authors", routes![
+        controllers::authors::index,
+        controllers::authors::create,
+        controllers::authors::show,
+        controllers::authors::update,
+        controllers::authors::delete
+    ])
+    .mount("/books", routes![
+        controllers::books::index,
+        controllers::books::create,
+        controllers::books::show,
+        controllers::books::update,
+        controllers::books::delete
+    ])
 }
