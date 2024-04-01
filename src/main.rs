@@ -1,4 +1,5 @@
 use controllers::{Response, SuccessResponse};
+use fairings::cors::{options, CORS};
 use migrator::Migrator;
 use rocket::http::Status;
 use sea_orm_migration::MigratorTrait;
@@ -11,6 +12,7 @@ mod db;
 mod migrator;
 mod entities;
 mod controllers;
+mod fairings;
 
 pub struct AppConfig {
     db_host: String,
@@ -54,6 +56,9 @@ async fn rocket() -> _ {
     };
 
     rocket::build()
+    .attach(CORS)
+    .manage(db)
+    .mount("/", routes![options])
     .mount("/", routes![index])
     .mount("/auth", routes![
         controllers::auth::sign_in,
