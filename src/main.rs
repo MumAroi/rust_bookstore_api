@@ -8,12 +8,12 @@ use sea_orm_migration::MigratorTrait;
 #[macro_use]
 extern crate rocket;
 
+mod auth;
 mod controllers;
 mod db;
 mod entities;
 mod fairings;
 mod migrator;
-mod auth;
 
 pub struct AppConfig {
     db_host: String,
@@ -67,7 +67,11 @@ async fn rocket() -> _ {
         .mount("/", routes![index])
         .mount(
             "/auth",
-            routes![controllers::auth::sign_in, controllers::auth::sign_up],
+            routes![
+                controllers::auth::sign_in,
+                controllers::auth::sign_up,
+                controllers::auth::me
+            ],
         )
         .mount(
             "/authors",

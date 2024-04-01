@@ -1,5 +1,5 @@
 use crate::{
-    auth::Claims,
+    auth::{AuthenticatedUser, Claims},
     entities::{prelude::User, user},
     AppConfig,
 };
@@ -58,7 +58,7 @@ pub async fn sign_in(
     }
 
     let claims = Claims {
-        sub: u.id as u32,
+        sub: u.id,
         role: "user".to_string(),
         exp: SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
@@ -124,5 +124,31 @@ pub async fn sign_up(
     Ok(SuccessResponse((
         Status::Created,
         "Account created".to_string(),
+    )))
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct ResMe {
+    id: i32,
+    email: String,
+    first_name: Option<String>,
+    last_name: Option<String>,
+}
+
+#[get("/me")]
+pub async fn me(db: &State<DatabaseConnection>, user: AuthenticatedUser) -> Response<Json<ResMe>> {
+    let db = db as &DatabaseConnection;
+
+    let u: user::Model = User::find_by_id(user.id).one(db).await?.unwrap();
+
+    Ok(SuccessResponse((
+        Status::Ok,
+        Json(ResMe {
+            id: u.id,
+            email: u.email,
+            first_name: u.first_name,
+            last_name: u.last_name,
+        }),
     )))
 }
