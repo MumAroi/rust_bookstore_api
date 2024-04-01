@@ -1,18 +1,19 @@
 use controllers::{Response, SuccessResponse};
+use dotenv::dotenv;
 use fairings::cors::{options, CORS};
 use migrator::Migrator;
 use rocket::http::Status;
 use sea_orm_migration::MigratorTrait;
-use dotenv::dotenv;
 
 #[macro_use]
 extern crate rocket;
 
-mod db;
-mod migrator;
-mod entities;
 mod controllers;
+mod db;
+mod entities;
 mod fairings;
+mod migrator;
+mod auth;
 
 pub struct AppConfig {
     db_host: String,
@@ -31,7 +32,8 @@ impl Default for AppConfig {
             db_username: std::env::var("DB_USERNAME").unwrap_or("root".to_string()),
             db_password: std::env::var("DB_PASSWORD").unwrap_or("332211".to_string()),
             db_database: std::env::var("DB_DATABASE").unwrap_or("bookstore".to_string()),
-            jwt_secret: std::env::var("JWT_SECRET").expect("Please set the secret key in the .env file"),
+            jwt_secret: std::env::var("JWT_SECRET")
+                .expect("Please set the secret key in the .env file"),
         }
     }
 }
@@ -43,7 +45,7 @@ fn index() -> Response<String> {
 
 #[launch]
 async fn rocket() -> _ {
-    dotenv().ok(); 
+    dotenv().ok();
 
     let config: AppConfig = AppConfig::default();
 
@@ -58,27 +60,33 @@ async fn rocket() -> _ {
     };
 
     rocket::build()
-    .attach(CORS)
-    .manage(db)
-    .manage(config)
-    .mount("/", routes![options])
-    .mount("/", routes![index])
-    .mount("/auth", routes![
-        controllers::auth::sign_in,
-        controllers::auth::sign_up
-    ])
-    .mount("/authors", routes![
-        controllers::authors::index,
-        controllers::authors::create,
-        controllers::authors::show,
-        controllers::authors::update,
-        controllers::authors::delete
-    ])
-    .mount("/books", routes![
-        controllers::books::index,
-        controllers::books::create,
-        controllers::books::show,
-        controllers::books::update,
-        controllers::books::delete
-    ])
+        .attach(CORS)
+        .manage(db)
+        .manage(config)
+        .mount("/", routes![options])
+        .mount("/", routes![index])
+        .mount(
+            "/auth",
+            routes![controllers::auth::sign_in, controllers::auth::sign_up],
+        )
+        .mount(
+            "/authors",
+            routes![
+                controllers::authors::index,
+                controllers::authors::create,
+                controllers::authors::show,
+                controllers::authors::update,
+                controllers::authors::delete
+            ],
+        )
+        .mount(
+            "/books",
+            routes![
+                controllers::books::index,
+                controllers::books::create,
+                controllers::books::show,
+                controllers::books::update,
+                controllers::books::delete
+            ],
+        )
 }

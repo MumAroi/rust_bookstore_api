@@ -1,14 +1,17 @@
-use std::time::SystemTime;
-
-use crate::{entities::{prelude::User, user}, AppConfig};
+use crate::{
+    auth::Claims,
+    entities::{prelude::User, user},
+    AppConfig,
+};
 use bcrypt::{hash, verify, DEFAULT_COST};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use rocket::{
     http::Status,
-    serde::{self, json::Json, Deserialize, Serialize},
+    serde::{json::Json, Deserialize, Serialize},
     State,
 };
-use sea_orm::{prelude::DateTimeUtc, *};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
+use std::time::SystemTime;
 
 use super::{ErrorResponse, Response, SuccessResponse};
 
@@ -23,14 +26,6 @@ pub struct ReqSignIn {
 #[serde(crate = "rocket::serde")]
 pub struct ResSignIn {
     token: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(crate = "rocket::serde")]
-struct Claims {
-    sub: i32,
-    role: String,
-    exp: u64,
 }
 
 #[post("/sign-in", data = "<req_sign_in>")]
@@ -63,7 +58,7 @@ pub async fn sign_in(
     }
 
     let claims = Claims {
-        sub: u.id,
+        sub: u.id as u32,
         role: "user".to_string(),
         exp: SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
@@ -76,7 +71,8 @@ pub async fn sign_in(
         &Header::default(),
         &claims,
         &EncodingKey::from_secret(config.jwt_secret.as_bytes()),
-    ).unwrap();
+    )
+    .unwrap();
 
     Ok(SuccessResponse((Status::Ok, ResSignIn { token })))
 }
