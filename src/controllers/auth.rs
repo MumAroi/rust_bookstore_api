@@ -33,7 +33,7 @@ pub async fn sign_in(
     db: &State<DatabaseConnection>,
     config: &State<AppConfig>,
     req_sign_in: Json<ReqSignIn>,
-) -> Response<ResSignIn> {
+) -> Response<Json<ResSignIn>> {
     let db = db as &DatabaseConnection;
 
     let u: user::Model = match User::find()
@@ -74,7 +74,7 @@ pub async fn sign_in(
     )
     .unwrap();
 
-    Ok(SuccessResponse((Status::Ok, ResSignIn { token })))
+    Ok(SuccessResponse((Status::Ok, Json(ResSignIn { token }))))
 }
 
 #[derive(Deserialize)]
