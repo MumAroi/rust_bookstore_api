@@ -22,7 +22,7 @@ pub struct ReBook {
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
-pub struct ReBookList {
+pub struct ResBookList {
     total: usize,
     books: Vec<ReBook>,
 }
@@ -31,7 +31,7 @@ pub struct ReBookList {
 pub async fn index(
     db: &State<DatabaseConnection>,
     _user: AuthenticatedUser,
-) -> Response<Json<ReBookList>> {
+) -> Response<Json<ResBookList>> {
     let db = db as &DatabaseConnection;
 
     let books = Book::find()
@@ -50,7 +50,7 @@ pub async fn index(
 
     Ok(SuccessResponse((
         Status::Ok,
-        Json(ReBookList {
+        Json(ResBookList {
             total: books.len(),
             books,
         }),
