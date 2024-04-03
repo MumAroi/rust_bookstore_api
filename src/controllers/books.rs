@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use super::{Response, SuccessResponse};
 use crate::{
     auth::AuthenticatedUser,
@@ -8,7 +10,9 @@ use rocket::{
     serde::{json::Json, Deserialize, Serialize},
     State,
 };
-use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, QueryOrder, Set};
+use sea_orm::{
+    prelude::DateTimeUtc, ActiveModelTrait, DatabaseConnection, EntityTrait, QueryOrder, Set,
+};
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -129,9 +133,43 @@ pub async fn show(
     )))
 }
 
-#[put("/<id>")]
-pub async fn update(id: u32) -> Response<String> {
-    todo!()
+#[put("/<id>", data = "<req_book>")]
+pub async fn update(
+    db: &State<DatabaseConnection>,
+    _user: AuthenticatedUser,
+    id: i32,
+    req_book: Json<ReqBook>,
+) -> Response<Json<ResBook>> {
+    let db = db as &DatabaseConnection;
+
+    let mut book: book::ActiveModel = match Book::find_by_id(id).one(db).await? {
+        Some(b) => b.into(),
+        None => {
+            return Err(super::ErrorResponse((
+                Status::NotFound,
+                "Book not found".to_string(),
+            )))
+        }
+    };
+
+    book.author_id = Set(req_book.author_id);
+    book.title = Set(req_book.title.to_owned());
+    book.year = Set(req_book.year.to_owned());
+    book.cover = Set(req_book.cover.to_owned());
+    book.updated_at = Set(DateTimeUtc::from(SystemTime::now()));
+
+    let book = book.update(db).await?;
+
+    Ok(SuccessResponse((
+        Status::Ok,
+        Json(ResBook {
+            id: book.id,
+            author_id: book.author_id,
+            title: book.title,
+            year: book.year,
+            cover: book.cover,
+        }),
+    )))
 }
 
 #[delete("/<id>")]
