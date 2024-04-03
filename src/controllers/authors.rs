@@ -92,8 +92,34 @@ pub async fn create(
 }
 
 #[get("/<id>")]
-pub async fn show(id: u32) -> Response<String> {
-    todo!()
+pub async fn show(
+    db: &State<DatabaseConnection>,
+    _user: AuthenticatedUser,
+    id: i32,
+) -> Response<Json<ResAuthor>> {
+    let db = db as &DatabaseConnection;
+
+    let author = Author::find_by_id(id).one(db).await?;
+
+    let author = match author {
+        Some(a) => a,
+        None => {
+            return Err(super::ErrorResponse((
+                Status::NotFound,
+                "Author not found".to_string(),
+            )))
+        }
+    };
+
+    Ok(SuccessResponse((
+        Status::Ok,
+        Json(ResAuthor {
+            id: author.id,
+            first_name: author.first_name,
+            last_name: author.last_name,
+            bio: author.bio,
+        }),
+    )))
 }
 
 #[put("/<id>")]
