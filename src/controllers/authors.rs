@@ -1,9 +1,15 @@
 use std::time::SystemTime;
 
-use super::{Response, SuccessResponse};
+use super::{
+    books::{ResBook, ResBookList},
+    Response, SuccessResponse,
+};
 use crate::{
     auth::AuthenticatedUser,
-    entities::{author, prelude::Author},
+    entities::{
+        author, book,
+        prelude::{Author, Book},
+    },
 };
 use rocket::{
     http::Status,
@@ -185,4 +191,42 @@ pub async fn delete(
     author.delete(db).await?;
 
     Ok(SuccessResponse((Status::Ok, "Author deleted".to_string())))
+}
+
+#[get("/<id>/books")]
+pub async fn get_books(
+    db: &State<DatabaseConnection>,
+    _user: AuthenticatedUser,
+    id: i32,
+) -> Response<Json<ResBookList>> {
+    let db = db as &DatabaseConnection;
+
+    let author = match Author::find_by_id(id).one(db).await? {
+        Some(a) => a,
+        None => {
+            return Err(super::ErrorResponse((
+                Status::NotFound,
+                "Author not found".to_string(),
+            )))
+        }
+    };
+
+    let books: Vec<book::Model> = author.find_related(Book).all(db).await?;
+
+    Ok(SuccessResponse((
+        Status::Ok,
+        Json(ResBookList {
+            total: books.len(),
+            books: books
+                .into_iter()
+                .map(|b| ResBook {
+                    id: b.id,
+                    author_id: b.author_id,
+                    title: b.title,
+                    year: b.year,
+                    cover: b.cover,
+                })
+                .collect::<Vec<_>>(),
+        }),
+    )))
 }

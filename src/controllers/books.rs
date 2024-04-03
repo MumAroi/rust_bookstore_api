@@ -18,27 +18,27 @@ use sea_orm::{
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct ResBook {
-    id: i32,
-    author_id: i32,
-    title: String,
-    year: String,
-    cover: String,
+    pub id: i32,
+    pub author_id: i32,
+    pub title: String,
+    pub year: String,
+    pub cover: String,
 }
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct ResBookList {
-    total: usize,
-    books: Vec<ResBook>,
+    pub total: usize,
+    pub books: Vec<ResBook>,
 }
 
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct ReqBook {
-    author_id: i32,
-    title: String,
-    year: String,
-    cover: String,
+    pub author_id: i32,
+    pub title: String,
+    pub year: String,
+    pub cover: String,
 }
 
 #[get("/")]
