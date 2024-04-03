@@ -5,14 +5,14 @@ use crate::{
 };
 use rocket::{
     http::Status,
-    serde::{json::Json, Serialize},
+    serde::{json::Json, Deserialize, Serialize},
     State,
 };
-use sea_orm::{DatabaseConnection, EntityTrait, QueryOrder};
+use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, QueryOrder, Set};
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
-pub struct ReBook {
+pub struct ResBook {
     id: i32,
     author_id: i32,
     title: String,
@@ -24,7 +24,16 @@ pub struct ReBook {
 #[serde(crate = "rocket::serde")]
 pub struct ResBookList {
     total: usize,
-    books: Vec<ReBook>,
+    books: Vec<ResBook>,
+}
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct ReqBook {
+    author_id: i32,
+    title: String,
+    year: String,
+    cover: String,
 }
 
 #[get("/")]
@@ -39,7 +48,7 @@ pub async fn index(
         .all(db)
         .await?
         .iter()
-        .map(|book| ReBook {
+        .map(|book| ResBook {
             id: book.id,
             author_id: book.author_id,
             title: book.title.to_owned(),
@@ -57,9 +66,35 @@ pub async fn index(
     )))
 }
 
-#[post("/")]
-pub async fn create() -> Response<String> {
-    todo!()
+#[post("/", data = "<req_book>")]
+pub async fn create(
+    db: &State<DatabaseConnection>,
+    user: AuthenticatedUser,
+    req_book: Json<ReqBook>,
+) -> Response<Json<ResBook>> {
+    let db = db as &DatabaseConnection;
+
+    let book = book::ActiveModel {
+        user_id: Set(user.id),
+        author_id: Set(req_book.author_id.to_owned()),
+        title: Set(req_book.title.to_owned()),
+        year: Set(req_book.year.to_owned()),
+        cover: Set(req_book.cover.to_owned()),
+        ..Default::default()
+    };
+
+    let book = book.insert(db).await?;
+
+    Ok(SuccessResponse((
+        Status::Created,
+        Json(ResBook {
+            id: book.id,
+            author_id: book.author_id,
+            title: book.title,
+            year: book.year,
+            cover: book.cover,
+        }),
+    )))
 }
 
 #[get("/<id>")]
