@@ -11,7 +11,8 @@ use rocket::{
     State,
 };
 use sea_orm::{
-    prelude::DateTimeUtc, ActiveModelTrait, DatabaseConnection, EntityTrait, QueryOrder, Set,
+    prelude::DateTimeUtc, ActiveModelTrait, DatabaseConnection, EntityTrait, ModelTrait,
+    QueryOrder, Set,
 };
 
 #[derive(Serialize)]
@@ -164,6 +165,24 @@ pub async fn update(
 }
 
 #[delete("/<id>")]
-pub async fn delete(id: u32) -> Response<String> {
-    todo!()
+pub async fn delete(
+    db: &State<DatabaseConnection>,
+    _user: AuthenticatedUser,
+    id: i32,
+) -> Response<String> {
+    let db = db as &DatabaseConnection;
+
+    let author = match Author::find_by_id(id).one(db).await? {
+        Some(a) => a,
+        None => {
+            return Err(super::ErrorResponse((
+                Status::NotFound,
+                "Author not found".to_string(),
+            )))
+        }
+    };
+
+    author.delete(db).await?;
+
+    Ok(SuccessResponse((Status::Ok, "Author deleted".to_string())))
 }
