@@ -29,6 +29,16 @@ pub struct ResAuthor {
     last_name: String,
     bio: String,
 }
+impl From<&author::Model> for ResAuthor {
+    fn from(author: &author::Model) -> Self {
+        Self {
+            id: author.id,
+            first_name: author.first_name.to_owned(),
+            last_name: author.last_name.to_owned(),
+            bio: author.bio.to_owned(),
+        }
+    }
+}
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -57,12 +67,7 @@ pub async fn index(
         .all(db)
         .await?
         .iter()
-        .map(|a| ResAuthor {
-            id: a.id,
-            first_name: a.first_name.to_owned(),
-            last_name: a.last_name.to_owned(),
-            bio: a.bio.to_owned(),
-        })
+        .map(ResAuthor::from)
         .collect::<Vec<_>>();
 
     Ok(SuccessResponse((
@@ -93,12 +98,7 @@ pub async fn create(
 
     Ok(SuccessResponse((
         Status::Created,
-        Json(ResAuthor {
-            id: author.id,
-            first_name: author.first_name,
-            last_name: author.last_name,
-            bio: author.bio,
-        }),
+        Json(ResAuthor::from(&author)),
     )))
 }
 
@@ -124,12 +124,7 @@ pub async fn show(
 
     Ok(SuccessResponse((
         Status::Ok,
-        Json(ResAuthor {
-            id: author.id,
-            first_name: author.first_name,
-            last_name: author.last_name,
-            bio: author.bio,
-        }),
+        Json(ResAuthor::from(&author)),
     )))
 }
 
@@ -161,12 +156,7 @@ pub async fn update(
 
     Ok(SuccessResponse((
         Status::Ok,
-        Json(ResAuthor {
-            id: author.id,
-            first_name: author.first_name,
-            last_name: author.last_name,
-            bio: author.bio,
-        }),
+        Json(ResAuthor::from(&author)),
     )))
 }
 

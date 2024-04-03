@@ -41,6 +41,18 @@ pub struct ReqBook {
     pub cover: String,
 }
 
+impl From<&book::Model> for ResBook {
+    fn from(book: &book::Model) -> Self {
+        Self {
+            id: book.id,
+            author_id: book.author_id,
+            title: book.title.to_owned(),
+            year: book.year.to_owned(),
+            cover: book.cover.to_owned(),
+        }
+    }
+}
+
 #[get("/")]
 pub async fn index(
     db: &State<DatabaseConnection>,
@@ -53,13 +65,7 @@ pub async fn index(
         .all(db)
         .await?
         .iter()
-        .map(|book| ResBook {
-            id: book.id,
-            author_id: book.author_id,
-            title: book.title.to_owned(),
-            year: book.year.to_owned(),
-            cover: book.cover.to_owned(),
-        })
+        .map(ResBook::from)
         .collect::<Vec<_>>();
 
     Ok(SuccessResponse((
@@ -92,13 +98,7 @@ pub async fn create(
 
     Ok(SuccessResponse((
         Status::Created,
-        Json(ResBook {
-            id: book.id,
-            author_id: book.author_id,
-            title: book.title,
-            year: book.year,
-            cover: book.cover,
-        }),
+        Json(ResBook::from(&book)),
     )))
 }
 
@@ -124,13 +124,7 @@ pub async fn show(
 
     Ok(SuccessResponse((
         Status::Ok,
-        Json(ResBook {
-            id: book.id,
-            author_id: book.author_id,
-            title: book.title,
-            year: book.year,
-            cover: book.cover,
-        }),
+        Json(ResBook::from(&book)),
     )))
 }
 
@@ -163,13 +157,7 @@ pub async fn update(
 
     Ok(SuccessResponse((
         Status::Ok,
-        Json(ResBook {
-            id: book.id,
-            author_id: book.author_id,
-            title: book.title,
-            year: book.year,
-            cover: book.cover,
-        }),
+        Json(ResBook::from(&book)),
     )))
 }
 
@@ -190,7 +178,7 @@ pub async fn delete(
             )))
         }
     };
-    
+
     book.delete(db).await?;
 
     Ok(SuccessResponse((Status::Ok, "Book deleted".to_string())))
